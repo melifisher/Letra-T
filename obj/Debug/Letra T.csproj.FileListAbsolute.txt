@@ -1,0 +1,11 @@
+C:\Users\Hp\source\repos\Letra T\bin\Debug\Letra T.exe.config
+C:\Users\Hp\source\repos\Letra T\bin\Debug\Letra T.exe
+C:\Users\Hp\source\repos\Letra T\bin\Debug\Letra T.pdb
+C:\Users\Hp\source\repos\Letra T\bin\Debug\OpenTK.dll
+C:\Users\Hp\source\repos\Letra T\bin\Debug\OpenTK.pdb
+C:\Users\Hp\source\repos\Letra T\bin\Debug\OpenTK.xml
+C:\Users\Hp\source\repos\Letra T\obj\Debug\Letra T.csproj.AssemblyReference.cache
+C:\Users\Hp\source\repos\Letra T\obj\Debug\Letra T.csproj.CoreCompileInputs.cache
+C:\Users\Hp\source\repos\Letra T\obj\Debug\Letra T.csproj.CopyComplete
+C:\Users\Hp\source\repos\Letra T\obj\Debug\Letra T.exe
+C:\Users\Hp\source\repos\Letra T\obj\Debug\Letra T.pdb
