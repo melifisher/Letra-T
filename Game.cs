@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
@@ -9,13 +10,12 @@ namespace Letra_T
 {
     public class Game : GameWindow
     {
-        private Objeto _objeto;
+        //private Objeto _objeto;
         private Shader shader;
-        private double _time;
         private Camera _camera;
         private bool _firstMove = true;
         private Vector2 _lastPos;
-
+        private Escenario escenario;
 
         public Game(int width, int height, string title)
             : base(width, height, GraphicsMode.Default, title)
@@ -23,25 +23,27 @@ namespace Letra_T
         }
         protected override void OnLoad(EventArgs e)
         {
-            GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-            GL.Enable(EnableCap.DepthTest); // Habilitar prueba de profundidad para 3D
-            
+            GL.ClearColor(Color.Black);
+            GL.Enable(EnableCap.DepthTest); // Habilita prueba de profundidad para 3D
+
             shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
-            _objeto = new Objeto();
-            _objeto.Load(shader);
-
-            // Posicionar la letra T
-            _objeto.Position = new Vector3(0, 0, -2);
-            // Rotar la letra T
-            _objeto.Rotation = new Vector3(0, MathHelper.DegreesToRadians(-30), 0);
-            // Escalar la letra T
-            _objeto.Scale = new Vector3(1f, 1f, 1f);
-            //_objeto.CenterOfMass = new Vector3(0, -0.25f, 0);
-
-            _camera = new Camera(Vector3.UnitZ * 1, Width / (float)Height);
-
+            _camera = new Camera(Vector3.UnitZ * 2, Width / (float)Height);
             CursorVisible = false;
             CursorGrabbed = true;
+
+            //_objeto = new Objeto();
+            //_objeto.Load(shader);
+
+            //_objeto.Position = new Vector3(0, 0, 0);
+            //_objeto.Rotation = new Vector3(0, MathHelper.DegreesToRadians(-30), 0);
+            //_objeto.Scale = new Vector3(1f, 1f, 1f);
+            //_objeto.CenterOfMass = new Vector3(0, -0.25f, 0);
+
+
+            escenario = new Escenario("Escenario 1", shader, _camera);
+            escenario.AddObjeto("letraT", CrearLetraT());
+
+            //Escenarios.Add(escenario1);
 
             base.OnLoad(e);
         }
@@ -107,17 +109,18 @@ namespace Letra_T
                 _camera.Pitch -= deltaY * sensitivity;
             }
 
-            _objeto.Rotation += new Vector3(0, 0, (float)e.Time);
+            //_objeto.Rotation += new Vector3(0, 0, (float)e.Time);
+            escenario.Update((float)e.Time);
 
             base.OnUpdateFrame(e);
         }
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            _time += 5.0 * e.Time;
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            
-            _objeto.Render( _camera.GetViewMatrix(), _camera.GetProjectionMatrix());
+
+            //_objeto.Dibujar( _camera.GetViewMatrix(), _camera.GetProjectionMatrix());
+            escenario.Render();
 
             Context.SwapBuffers();
 
@@ -145,15 +148,169 @@ namespace Letra_T
             GL.Viewport(0, 0, Width, Height);
 
             _camera.AspectRatio = Width / (float)Height;
+            //foreach (var escenario in Escenarios)
+            //{
+                escenario.Camera.AspectRatio = Width / (float)Height;
+            //}
             base.OnResize(e);
         }
 
         protected override void OnUnload(EventArgs e)
         {
-            _objeto.Unload();
+            //_objeto.Unload();
+            escenario.Dispose();
             GL.DeleteProgram(shader.Handle);
 
             base.OnUnload(e);
+        }
+
+        private Objeto CrearLetraT()
+        {
+            var letraT = new Objeto();
+
+            // Parte vertical de la T
+            var parteVertical = new Parte();
+
+            // Cara frontal (roja)
+            parteVertical.AddPoligono("rojo",new Poligono(
+                new Vector3[] {
+            new Vector3(-0.1f, -0.5f,  0.1f),
+            new Vector3( 0.1f, -0.5f,  0.1f),
+            new Vector3( 0.1f,  0.0f,  0.1f),
+            new Vector3(-0.1f,  0.0f,  0.1f)
+                },
+                new uint[] { 0, 1, 2, 2, 3, 0 },
+                Color.Red
+            ));
+
+            // Cara trasera (verde)
+            parteVertical.AddPoligono("verde",new Poligono(
+                new Vector3[] {
+            new Vector3(-0.1f, -0.5f, -0.1f),
+            new Vector3( 0.1f, -0.5f, -0.1f),
+            new Vector3( 0.1f,  0.0f, -0.1f),
+            new Vector3(-0.1f,  0.0f, -0.1f)
+                },
+                new uint[] { 0, 3, 2, 2, 1, 0 },
+                Color.Green
+            ));
+
+            // Cara izquierda (azul)
+            parteVertical.AddPoligono("azul",new Poligono(
+                new Vector3[] {
+            new Vector3(-0.1f, -0.5f, -0.1f),
+            new Vector3(-0.1f, -0.5f,  0.1f),
+            new Vector3(-0.1f,  0.0f,  0.1f),
+            new Vector3(-0.1f,  0.0f, -0.1f)
+                },
+                new uint[] { 0, 1, 2, 2, 3, 0 },
+                Color.Blue
+            ));
+
+            // Cara derecha (amarilla)
+            parteVertical.AddPoligono("amarillo",new Poligono(
+                new Vector3[] {
+            new Vector3(0.1f, -0.5f, -0.1f),
+            new Vector3(0.1f, -0.5f,  0.1f),
+            new Vector3(0.1f,  0.0f,  0.1f),
+            new Vector3(0.1f,  0.0f, -0.1f)
+                },
+                new uint[] { 0, 3, 2, 2, 1, 0 },
+                Color.Yellow
+            ));
+
+            // Cara inferior (cian)
+            parteVertical.AddPoligono("cian",new Poligono(
+                new Vector3[] {
+            new Vector3(-0.1f, -0.5f, -0.1f),
+            new Vector3( 0.1f, -0.5f, -0.1f),
+            new Vector3( 0.1f, -0.5f,  0.1f),
+            new Vector3(-0.1f, -0.5f,  0.1f)
+                },
+                new uint[] { 0, 1, 2, 2, 3, 0 },
+                Color.Cyan
+            ));
+
+            // Parte horizontal de la T
+            var parteHorizontal = new Parte();
+            //parteHorizontal.Position = new Vector3(0, 0.05f, 0);  // Ligero ajuste para que se una bien con la parte vertical
+
+            // Cara frontal (magenta)
+            parteHorizontal.AddPoligono("magenta", new Poligono(
+                new Vector3[] {
+            new Vector3(-0.5f,  0.0f,  0.1f),
+            new Vector3( 0.5f,  0.0f,  0.1f),
+            new Vector3( 0.5f,  0.1f,  0.1f),
+            new Vector3(-0.5f,  0.1f,  0.1f)
+                },
+                new uint[] { 0, 1, 2, 2, 3, 0 },
+                Color.Magenta
+            ));
+
+            // Cara trasera (naranja)
+            parteHorizontal.AddPoligono("naranja",new Poligono(
+                new Vector3[] {
+            new Vector3(-0.5f,  0.0f, -0.1f),
+            new Vector3( 0.5f,  0.0f, -0.1f),
+            new Vector3( 0.5f,  0.1f, -0.1f),
+            new Vector3(-0.5f,  0.1f, -0.1f)
+                },
+                new uint[] { 0, 3, 2, 2, 1, 0 },
+                Color.Orange
+            ));
+
+            // Cara superior (blanca)
+            parteHorizontal.AddPoligono("blanca",new Poligono(
+                new Vector3[] {
+            new Vector3(-0.5f,  0.1f, -0.1f),
+            new Vector3( 0.5f,  0.1f, -0.1f),
+            new Vector3( 0.5f,  0.1f,  0.1f),
+            new Vector3(-0.5f,  0.1f,  0.1f)
+                },
+                new uint[] { 0, 1, 2, 2, 3, 0 },
+                Color.White
+            ));
+
+            // Cara inferior (gris)
+            parteHorizontal.AddPoligono("gris",new Poligono(
+                new Vector3[] {
+            new Vector3(-0.5f,  0.0f, -0.1f),
+            new Vector3( 0.5f,  0.0f, -0.1f),
+            new Vector3( 0.5f,  0.0f,  0.1f),
+            new Vector3(-0.5f,  0.0f,  0.1f)
+                },
+                new uint[] { 0, 3, 2, 2, 1, 0 },
+                Color.Gray
+            ));
+
+            // Cara izquierda (púrpura)
+            parteHorizontal.AddPoligono("púrpura",new Poligono(
+                new Vector3[] {
+            new Vector3(-0.5f,  0.0f, -0.1f),
+            new Vector3(-0.5f,  0.0f,  0.1f),
+            new Vector3(-0.5f,  0.1f,  0.1f),
+            new Vector3(-0.5f,  0.1f, -0.1f)
+                },
+                new uint[] { 0, 1, 2, 2, 3, 0 },
+                Color.Purple
+            ));
+
+            // Cara derecha (lima)
+            parteHorizontal.AddPoligono("lima",new Poligono(
+                new Vector3[] {
+            new Vector3(0.5f,  0.0f, -0.1f),
+            new Vector3(0.5f,  0.0f,  0.1f),
+            new Vector3(0.5f,  0.1f,  0.1f),
+            new Vector3(0.5f,  0.1f, -0.1f)
+                },
+                new uint[] { 0, 3, 2, 2, 1, 0 },
+                Color.Lime
+            ));
+
+            letraT.AddParte("vertical",parteVertical);
+            letraT.AddParte("horizontal",parteHorizontal);
+
+            return letraT;
         }
     }
 }
