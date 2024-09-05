@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Collections.Generic;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
@@ -10,7 +11,6 @@ namespace Letra_T
 {
     public class Game : GameWindow
     {
-        //private Objeto _objeto;
         private Shader shader;
         private Camera _camera;
         private bool _firstMove = true;
@@ -31,19 +31,11 @@ namespace Letra_T
             CursorVisible = false;
             CursorGrabbed = true;
 
-            //_objeto = new Objeto();
-            //_objeto.Load(shader);
+            //var letraT = CrearLetraT();
+            //ObjetoSerializer.GuardarObjeto(letraT, "letraT.json");
 
-            //_objeto.Position = new Vector3(0, 0, 0);
-            //_objeto.Rotation = new Vector3(0, MathHelper.DegreesToRadians(-30), 0);
-            //_objeto.Scale = new Vector3(1f, 1f, 1f);
-            //_objeto.CenterOfMass = new Vector3(0, -0.25f, 0);
-
-
-            escenario = new Escenario("Escenario 1", shader, _camera);
-            escenario.AddObjeto("letraT", CrearLetraT());
-
-            //Escenarios.Add(escenario1);
+            escenario = new Escenario(shader, _camera);
+            escenario.AddObjeto("letraT", CargarLetraT());
 
             base.OnLoad(e);
         }
@@ -61,33 +53,52 @@ namespace Letra_T
                 Exit();
             }
 
+            CameraUpdate(input, (float)e.Time);
+
+            escenario.Update((float)e.Time);
+
+            base.OnUpdateFrame(e);
+        }
+        protected override void OnRenderFrame(FrameEventArgs e)
+        {
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+            //escenario.Render();
+            escenario.Draw();
+
+            Context.SwapBuffers();
+
+            base.OnRenderFrame(e);
+        }
+        private void CameraUpdate(KeyboardState input, float deltaTime)
+        {
             const float cameraSpeed = 1.5f;
             const float sensitivity = 0.2f;
 
             if (input.IsKeyDown(Key.Space))
             {
-                _camera.Position += _camera.Front * cameraSpeed * (float)e.Time; // Forward
+                _camera.Position += _camera.Front * cameraSpeed * deltaTime; // Forward
             }
 
             if (input.IsKeyDown(Key.LShift))
             {
-                _camera.Position -= _camera.Front * cameraSpeed * (float)e.Time; // Backwards
+                _camera.Position -= _camera.Front * cameraSpeed * deltaTime; // Backwards
             }
             if (input.IsKeyDown(Key.A))
             {
-                _camera.Position -= _camera.Right * cameraSpeed * (float)e.Time; // Left
+                _camera.Position -= _camera.Right * cameraSpeed * deltaTime; // Left
             }
             if (input.IsKeyDown(Key.D))
             {
-                _camera.Position += _camera.Right * cameraSpeed * (float)e.Time; // Right
+                _camera.Position += _camera.Right * cameraSpeed * deltaTime; // Right
             }
             if (input.IsKeyDown(Key.W))
             {
-                _camera.Position += _camera.Up * cameraSpeed * (float)e.Time; // Up
+                _camera.Position += _camera.Up * cameraSpeed * deltaTime; // Up
             }
             if (input.IsKeyDown(Key.S))
             {
-                _camera.Position -= _camera.Up * cameraSpeed * (float)e.Time; // Down
+                _camera.Position -= _camera.Up * cameraSpeed * deltaTime; // Down
             }
 
             // Estado del mouse
@@ -108,25 +119,7 @@ namespace Letra_T
                 _camera.Yaw += deltaX * sensitivity;
                 _camera.Pitch -= deltaY * sensitivity;
             }
-
-            //_objeto.Rotation += new Vector3(0, 0, (float)e.Time);
-            escenario.Update((float)e.Time);
-
-            base.OnUpdateFrame(e);
         }
-        protected override void OnRenderFrame(FrameEventArgs e)
-        {
-
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
-            //_objeto.Dibujar( _camera.GetViewMatrix(), _camera.GetProjectionMatrix());
-            escenario.Render();
-
-            Context.SwapBuffers();
-
-            base.OnRenderFrame(e);
-        }
-
         protected override void OnMouseMove(MouseMoveEventArgs e)
         {
             if (Focused)
@@ -147,7 +140,6 @@ namespace Letra_T
         {
             GL.Viewport(0, 0, Width, Height);
 
-            _camera.AspectRatio = Width / (float)Height;
             //foreach (var escenario in Escenarios)
             //{
                 escenario.Camera.AspectRatio = Width / (float)Height;
@@ -157,14 +149,16 @@ namespace Letra_T
 
         protected override void OnUnload(EventArgs e)
         {
-            //_objeto.Unload();
-            escenario.Dispose();
+            //escenario.Dispose();
             GL.DeleteProgram(shader.Handle);
 
             base.OnUnload(e);
         }
-
-        private Objeto CrearLetraT()
+        private Objeto CargarLetraT()
+        {
+            return ObjetoSerializer.CargarObjeto("letraT.json");
+        }
+            private Objeto CrearLetraT()
         {
             var letraT = new Objeto();
 
@@ -173,11 +167,11 @@ namespace Letra_T
 
             // Cara frontal (roja)
             parteVertical.AddPoligono("rojo",new Poligono(
-                new Vector3[] {
-            new Vector3(-0.1f, -0.5f,  0.1f),
-            new Vector3( 0.1f, -0.5f,  0.1f),
-            new Vector3( 0.1f,  0.0f,  0.1f),
-            new Vector3(-0.1f,  0.0f,  0.1f)
+                new List<Punto> {
+            new Punto(-0.1f, -0.5f,  0.1f),
+            new Punto( 0.1f, -0.5f,  0.1f),
+            new Punto( 0.1f,  0.0f,  0.1f),
+            new Punto(-0.1f,  0.0f,  0.1f)
                 },
                 new uint[] { 0, 1, 2, 2, 3, 0 },
                 Color.Red
@@ -185,11 +179,11 @@ namespace Letra_T
 
             // Cara trasera (verde)
             parteVertical.AddPoligono("verde",new Poligono(
-                new Vector3[] {
-            new Vector3(-0.1f, -0.5f, -0.1f),
-            new Vector3( 0.1f, -0.5f, -0.1f),
-            new Vector3( 0.1f,  0.0f, -0.1f),
-            new Vector3(-0.1f,  0.0f, -0.1f)
+                new List<Punto> {
+            new Punto(-0.1f, -0.5f, -0.1f),
+            new Punto( 0.1f, -0.5f, -0.1f),
+            new Punto( 0.1f,  0.0f, -0.1f),
+            new Punto(-0.1f,  0.0f, -0.1f)
                 },
                 new uint[] { 0, 3, 2, 2, 1, 0 },
                 Color.Green
@@ -197,11 +191,11 @@ namespace Letra_T
 
             // Cara izquierda (azul)
             parteVertical.AddPoligono("azul",new Poligono(
-                new Vector3[] {
-            new Vector3(-0.1f, -0.5f, -0.1f),
-            new Vector3(-0.1f, -0.5f,  0.1f),
-            new Vector3(-0.1f,  0.0f,  0.1f),
-            new Vector3(-0.1f,  0.0f, -0.1f)
+                new List<Punto> {
+            new Punto(-0.1f, -0.5f, -0.1f),
+            new Punto(-0.1f, -0.5f,  0.1f),
+            new Punto(-0.1f,  0.0f,  0.1f),
+            new Punto(-0.1f,  0.0f, -0.1f)
                 },
                 new uint[] { 0, 1, 2, 2, 3, 0 },
                 Color.Blue
@@ -209,11 +203,11 @@ namespace Letra_T
 
             // Cara derecha (amarilla)
             parteVertical.AddPoligono("amarillo",new Poligono(
-                new Vector3[] {
-            new Vector3(0.1f, -0.5f, -0.1f),
-            new Vector3(0.1f, -0.5f,  0.1f),
-            new Vector3(0.1f,  0.0f,  0.1f),
-            new Vector3(0.1f,  0.0f, -0.1f)
+                new List<Punto> {
+            new Punto(0.1f, -0.5f, -0.1f),
+            new Punto(0.1f, -0.5f,  0.1f),
+            new Punto(0.1f,  0.0f,  0.1f),
+            new Punto(0.1f,  0.0f, -0.1f)
                 },
                 new uint[] { 0, 3, 2, 2, 1, 0 },
                 Color.Yellow
@@ -221,11 +215,11 @@ namespace Letra_T
 
             // Cara inferior (cian)
             parteVertical.AddPoligono("cian",new Poligono(
-                new Vector3[] {
-            new Vector3(-0.1f, -0.5f, -0.1f),
-            new Vector3( 0.1f, -0.5f, -0.1f),
-            new Vector3( 0.1f, -0.5f,  0.1f),
-            new Vector3(-0.1f, -0.5f,  0.1f)
+                new List<Punto> {
+            new Punto(-0.1f, -0.5f, -0.1f),
+            new Punto( 0.1f, -0.5f, -0.1f),
+            new Punto( 0.1f, -0.5f,  0.1f),
+            new Punto(-0.1f, -0.5f,  0.1f)
                 },
                 new uint[] { 0, 1, 2, 2, 3, 0 },
                 Color.Cyan
@@ -233,15 +227,15 @@ namespace Letra_T
 
             // Parte horizontal de la T
             var parteHorizontal = new Parte();
-            //parteHorizontal.Position = new Vector3(0, 0.05f, 0);  // Ligero ajuste para que se una bien con la parte vertical
+            parteHorizontal.CenterOfMass = new Punto(0, 0.05f, 0); 
 
             // Cara frontal (magenta)
             parteHorizontal.AddPoligono("magenta", new Poligono(
-                new Vector3[] {
-            new Vector3(-0.5f,  0.0f,  0.1f),
-            new Vector3( 0.5f,  0.0f,  0.1f),
-            new Vector3( 0.5f,  0.1f,  0.1f),
-            new Vector3(-0.5f,  0.1f,  0.1f)
+                new List<Punto> {
+            new Punto(-0.5f,  0.0f,  0.1f),
+            new Punto( 0.5f,  0.0f,  0.1f),
+            new Punto( 0.5f,  0.1f,  0.1f),
+            new Punto(-0.5f,  0.1f,  0.1f)
                 },
                 new uint[] { 0, 1, 2, 2, 3, 0 },
                 Color.Magenta
@@ -249,11 +243,11 @@ namespace Letra_T
 
             // Cara trasera (naranja)
             parteHorizontal.AddPoligono("naranja",new Poligono(
-                new Vector3[] {
-            new Vector3(-0.5f,  0.0f, -0.1f),
-            new Vector3( 0.5f,  0.0f, -0.1f),
-            new Vector3( 0.5f,  0.1f, -0.1f),
-            new Vector3(-0.5f,  0.1f, -0.1f)
+                new List<Punto> {
+            new Punto(-0.5f,  0.0f, -0.1f),
+            new Punto( 0.5f,  0.0f, -0.1f),
+            new Punto( 0.5f,  0.1f, -0.1f),
+            new Punto(-0.5f,  0.1f, -0.1f)
                 },
                 new uint[] { 0, 3, 2, 2, 1, 0 },
                 Color.Orange
@@ -261,11 +255,11 @@ namespace Letra_T
 
             // Cara superior (blanca)
             parteHorizontal.AddPoligono("blanca",new Poligono(
-                new Vector3[] {
-            new Vector3(-0.5f,  0.1f, -0.1f),
-            new Vector3( 0.5f,  0.1f, -0.1f),
-            new Vector3( 0.5f,  0.1f,  0.1f),
-            new Vector3(-0.5f,  0.1f,  0.1f)
+                new List<Punto> {
+            new Punto(-0.5f,  0.1f, -0.1f),
+            new Punto( 0.5f,  0.1f, -0.1f),
+            new Punto( 0.5f,  0.1f,  0.1f),
+            new Punto(-0.5f,  0.1f,  0.1f)
                 },
                 new uint[] { 0, 1, 2, 2, 3, 0 },
                 Color.White
@@ -273,11 +267,11 @@ namespace Letra_T
 
             // Cara inferior (gris)
             parteHorizontal.AddPoligono("gris",new Poligono(
-                new Vector3[] {
-            new Vector3(-0.5f,  0.0f, -0.1f),
-            new Vector3( 0.5f,  0.0f, -0.1f),
-            new Vector3( 0.5f,  0.0f,  0.1f),
-            new Vector3(-0.5f,  0.0f,  0.1f)
+                new List<Punto> {
+            new Punto(-0.5f,  0.0f, -0.1f),
+            new Punto( 0.5f,  0.0f, -0.1f),
+            new Punto( 0.5f,  0.0f,  0.1f),
+            new Punto(-0.5f,  0.0f,  0.1f)
                 },
                 new uint[] { 0, 3, 2, 2, 1, 0 },
                 Color.Gray
@@ -285,11 +279,11 @@ namespace Letra_T
 
             // Cara izquierda (púrpura)
             parteHorizontal.AddPoligono("púrpura",new Poligono(
-                new Vector3[] {
-            new Vector3(-0.5f,  0.0f, -0.1f),
-            new Vector3(-0.5f,  0.0f,  0.1f),
-            new Vector3(-0.5f,  0.1f,  0.1f),
-            new Vector3(-0.5f,  0.1f, -0.1f)
+                new List<Punto> {
+            new Punto(-0.5f,  0.0f, -0.1f),
+            new Punto(-0.5f,  0.0f,  0.1f),
+            new Punto(-0.5f,  0.1f,  0.1f),
+            new Punto(-0.5f,  0.1f, -0.1f)
                 },
                 new uint[] { 0, 1, 2, 2, 3, 0 },
                 Color.Purple
@@ -297,11 +291,11 @@ namespace Letra_T
 
             // Cara derecha (lima)
             parteHorizontal.AddPoligono("lima",new Poligono(
-                new Vector3[] {
-            new Vector3(0.5f,  0.0f, -0.1f),
-            new Vector3(0.5f,  0.0f,  0.1f),
-            new Vector3(0.5f,  0.1f,  0.1f),
-            new Vector3(0.5f,  0.1f, -0.1f)
+                new List<Punto> {
+            new Punto(0.5f,  0.0f, -0.1f),
+            new Punto(0.5f,  0.0f,  0.1f),
+            new Punto(0.5f,  0.1f,  0.1f),
+            new Punto(0.5f,  0.1f, -0.1f)
                 },
                 new uint[] { 0, 3, 2, 2, 1, 0 },
                 Color.Lime

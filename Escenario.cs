@@ -9,15 +9,13 @@ namespace Letra_T
         public Dictionary<string, Objeto> Objetos { get; private set; }
         public Shader Shader { get; private set; }
         public Camera Camera { get; private set; }
-        public string Nombre { get; set; }
-        public Vector3 CenterOfMass { get; private set; }
-        public Escenario(string nombre, Shader shader, Camera camera)
+        public Punto CenterOfMass { get; private set; }
+        public Escenario(Shader shader, Camera camera)
         {
-            Nombre = nombre;
             Objetos = new Dictionary<string, Objeto>();
             Shader = shader;
             Camera = camera;
-            CenterOfMass = Vector3.Zero;
+            CenterOfMass = new Punto();
         }
         public void AddObjeto(string key, Objeto objeto)
         {
@@ -31,6 +29,14 @@ namespace Letra_T
         {
             Objetos.Remove(key);
         }
+        public void Draw()
+        {
+            foreach (var objeto in Objetos)
+            {
+                objeto.Value.Draw();
+            }
+        }
+
         public void Render()
         {
             Shader.Use();
@@ -63,7 +69,7 @@ namespace Letra_T
         {
             foreach (var objeto in Objetos)
             {
-                objeto.Value.Rotation += new Vector3(0, deltaTime, 0);
+                objeto.Value.Update(deltaTime);
             }
         }
         public void Dispose()

@@ -1,37 +1,51 @@
 ﻿using System.Collections.Generic;
-using OpenTK;
+using System;
 using OpenTK.Graphics.OpenGL;
 using System.Drawing;
 
 namespace Letra_T
 {
-
-    public class Poligono
+    [Serializable]
+    class Poligono
     {
         private int _vao;
         private int _vbo;
         private int _ebo;
-        public Vector3[] Vertices { get; private set; }
+        public List<Punto> Puntos { get; set; }
         public uint[] Indices { get; private set; }
         public Color Color { get; set; }
-        public Vector3 CenterOfMass { get; set; }
+        public Punto CenterOfMass { get; set; }
 
-        public Poligono(Vector3[] vertices, uint[] indices, Color color)
+        public Poligono(List<Punto> puntos, uint[] indices, Color color)
         {
-            Vertices = vertices;
+            Puntos = puntos;
             Indices = indices;
             Color = color; 
             CalculateCenterOfMass();
-            SetupBuffers();
+            //SetupBuffers();
         }
+        public void Draw()
+        {
+            GL.Color4(Color);
+            GL.Begin(PrimitiveType.Polygon);
+            foreach( var punto in Puntos)
+            {
+                GL.Vertex3(punto.X, punto.Y, punto.Z);
+            }
+            GL.End();
+        }
+
         private void CalculateCenterOfMass()
         {
-            Vector3 sum = Vector3.Zero;
-            foreach (var vertex in Vertices)
+            float sumX = 0, sumY = 0, sumZ = 0;
+            foreach (var vertex in Puntos)
             {
-                sum += vertex;
+                sumX += vertex.X;
+                sumY += vertex.Y;
+                sumZ += vertex.Z;
             }
-            CenterOfMass = sum / Vertices.Length;
+            int count = Puntos.Count;
+            CenterOfMass = new Punto(sumX / count, sumY / count, sumZ / count);
         }
 
         private void SetupBuffers()
@@ -76,9 +90,9 @@ namespace Letra_T
         public float[] GetVertexData()
         {
             var vertexData = new List<float>();
-            foreach (var vertex in Vertices)
+            foreach (var vertex in Puntos)
             {
-                vertexData.AddRange(new[] { vertex.X, vertex.Y, vertex.Z });
+                vertexData.AddRange(vertex.ToArray());
                 vertexData.AddRange(new[] { Color.R / 255f, Color.G / 255f, Color.B / 255f, 1.0f });
             }
             return vertexData.ToArray();

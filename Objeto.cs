@@ -1,24 +1,20 @@
 ﻿using System.Collections.Generic;
 using OpenTK;
-
+using OpenTK.Graphics.OpenGL;
+using System;
 
 namespace Letra_T
 {
-    public class Objeto
+    [Serializable]
+    class Objeto
     {
-        public Dictionary<string, Parte> Partes { get; private set; }
-        public Vector3 Position { get; set; }
-        public Vector3 Rotation { get; set; }
-        public Vector3 Scale { get; set; }
-        public Vector3 CenterOfMass { get; private set; }
+        public Dictionary<string, Parte> Partes { get; set; }
+        public Punto CenterOfMass { get; set; }
 
         public Objeto()
         {
             Partes = new Dictionary<string, Parte>();
-            Position = Vector3.Zero;
-            Rotation = Vector3.Zero;
-            Scale = Vector3.One;
-            CenterOfMass = Vector3.Zero;
+            CenterOfMass = new Punto();
         }
 
         public void AddParte(string key, Parte parte)
@@ -34,33 +30,50 @@ namespace Letra_T
         {
             Partes.Remove(key);
         }
+        public void Draw()
+        {
+            foreach (var parte in Partes)
+            {
+                parte.Value.Draw();
+            }
+        }
 
+        public void Update(float deltaTime)
+        {
+            foreach (var parte in Partes)
+            {
+                parte.Value.Update(deltaTime);
+            }
+
+            //Rotation += new Vector3(0, deltaTime, 0);
+            GL.Rotate(deltaTime * 5.0, new Vector3d(-1, 1, 0));
+        }
         private void RecalculateCenterOfMass()
         {
             if (Partes.Count == 0)
             {
-                CenterOfMass = Vector3.Zero;
+                CenterOfMass = new Punto();
                 return;
             }
 
-            Vector3 sum = Vector3.Zero;
+            float sumX = 0, sumY = 0, sumZ = 0;
             foreach (var parte in Partes)
             {
-                sum += parte.Value.CenterOfMass + parte.Value.Position;
-                //sum += parte.Value.CenterOfMass;
+                //sum += parte.Value.CenterOfMass + parte.Value.Position;
+                sumX += parte.Value.CenterOfMass.X;
+                sumY += parte.Value.CenterOfMass.Y;
+                sumZ += parte.Value.CenterOfMass.Z;
             }
-            CenterOfMass = sum / Partes.Count;
+            int count = Partes.Count;
+            CenterOfMass = new Punto(sumX / count, sumY / count, sumZ / count);
         }
 
         public Matrix4 GetModelMatrix()
         {
-            return Matrix4.CreateTranslation(-CenterOfMass)
-                 * Matrix4.CreateScale(Scale)
-                 * Matrix4.CreateRotationX(Rotation.X)
-                 * Matrix4.CreateRotationY(Rotation.Y)
-                 * Matrix4.CreateRotationZ(Rotation.Z)
-                 * Matrix4.CreateTranslation(CenterOfMass)
-                 *Matrix4.CreateTranslation(Position);
+            Vector3 CenterOfMassVector = new Vector3(CenterOfMass.X, CenterOfMass.Y, CenterOfMass.Z);
+
+            return Matrix4.CreateTranslation(-CenterOfMassVector)
+                 * Matrix4.CreateTranslation(CenterOfMassVector);
         }
         
         public void Dispose()

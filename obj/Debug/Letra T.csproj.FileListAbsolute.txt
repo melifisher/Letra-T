@@ -9,3 +9,5 @@ C:\Users\Hp\source\repos\Letra T\obj\Debug\Letra T.csproj.CoreCompileInputs.cach
 C:\Users\Hp\source\repos\Letra T\obj\Debug\Letra T.csproj.CopyComplete
 C:\Users\Hp\source\repos\Letra T\obj\Debug\Letra T.exe
 C:\Users\Hp\source\repos\Letra T\obj\Debug\Letra T.pdb
+C:\Users\Hp\source\repos\Letra T\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Hp\source\repos\Letra T\bin\Debug\Newtonsoft.Json.xml

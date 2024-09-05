@@ -11,5 +11,6 @@ namespace Letra_T
         void Add(string key, Interface1 clase);
         Interface1 Get(string key);
         void Delete(string key);
+        void Draw();
     }
 }
