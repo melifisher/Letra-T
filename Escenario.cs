@@ -37,6 +37,14 @@ namespace Letra_T
             }
         }
 
+        public void Update(float deltaTime)
+        {
+            foreach (var objeto in Objetos)
+            {
+                objeto.Value.Update(deltaTime);
+            }
+        }
+
         public void Render()
         {
             Shader.Use();
@@ -65,13 +73,6 @@ namespace Letra_T
             }
         }
 
-        public void Update(float deltaTime)
-        {
-            foreach (var objeto in Objetos)
-            {
-                objeto.Value.Update(deltaTime);
-            }
-        }
         public void Dispose()
         {   
             foreach (var objeto in Objetos)

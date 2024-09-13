@@ -24,7 +24,7 @@ namespace Letra_T
         protected override void OnLoad(EventArgs e)
         {
             GL.ClearColor(Color.Black);
-            GL.Enable(EnableCap.DepthTest); // Habilita prueba de profundidad para 3D
+            GL.Enable(EnableCap.DepthTest);
 
             shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
             _camera = new Camera(Vector3.UnitZ * 2, Width / (float)Height);
@@ -63,8 +63,8 @@ namespace Letra_T
         {
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            //escenario.Render();
-            escenario.Draw();
+            escenario.Render();
+            //escenario.Draw();
 
             Context.SwapBuffers();
 
@@ -149,20 +149,19 @@ namespace Letra_T
 
         protected override void OnUnload(EventArgs e)
         {
-            //escenario.Dispose();
+            escenario.Dispose();
             GL.DeleteProgram(shader.Handle);
 
             base.OnUnload(e);
         }
         private Objeto CargarLetraT()
         {
-            return ObjetoSerializer.CargarObjeto("letraT.json");
+            return ObjetoSerializer.Cargar<Objeto>("letraT.json");
         }
             private Objeto CrearLetraT()
         {
             var letraT = new Objeto();
 
-            // Parte vertical de la T
             var parteVertical = new Parte();
 
             // Cara frontal (roja)

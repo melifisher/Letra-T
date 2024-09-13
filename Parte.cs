@@ -10,10 +10,16 @@ namespace Letra_T
     {
         public Dictionary<string,Poligono> Poligonos { get; set; }
         public Punto CenterOfMass { get; set; }
+        public Punto Position { get; set; }
+        public Punto Rotation { get; set; }
+        public Punto Scale { get; set; }
 
         public Parte()
         {
             Poligonos = new Dictionary<string, Poligono>();
+            Position = new Punto();
+            Rotation = new Punto();
+            Scale = new Punto(1, 1, 1);
             CenterOfMass = new Punto();
         }
 
@@ -62,8 +68,16 @@ namespace Letra_T
         public Matrix4 GetModelMatrix()
         {
             Vector3 CenterOfMassVector = new Vector3(CenterOfMass.X, CenterOfMass.Y, CenterOfMass.Z);
+            Vector3 ScaleVector = new Vector3(Scale.X, Scale.Y, Scale.Z);
+            Vector3 PositionVector = new Vector3(Position.X, Position.Y, Position.Z);
+
             return Matrix4.CreateTranslation(-CenterOfMassVector)
-                 * Matrix4.CreateTranslation(CenterOfMassVector);
+                 * Matrix4.CreateScale(ScaleVector)
+                * Matrix4.CreateRotationX(Rotation.X)
+                * Matrix4.CreateRotationY(Rotation.Y)
+                * Matrix4.CreateRotationZ(Rotation.Z)
+                * Matrix4.CreateTranslation(CenterOfMassVector)
+                * Matrix4.CreateTranslation(PositionVector);
         }
         public void Dispose()
         {

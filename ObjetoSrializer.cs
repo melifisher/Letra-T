@@ -6,7 +6,7 @@ namespace Letra_T
 {
     class ObjetoSerializer
     {
-        public static void GuardarObjeto(Objeto objeto, string rutaArchivo)
+        public static void Guardar<T>(T objeto, string rutaArchivo)
         {
             try { 
                 string jsonString = JsonConvert.SerializeObject(objeto, Formatting.Indented);
@@ -18,10 +18,10 @@ namespace Letra_T
             }
         }
 
-        public static Objeto CargarObjeto(string rutaArchivo)
+        public static T Cargar<T>(string rutaArchivo)
         {
             string jsonString = File.ReadAllText(rutaArchivo);
-            return JsonConvert.DeserializeObject<Objeto>(jsonString);
+            return JsonConvert.DeserializeObject<T>(jsonString);
         }
     }
 }

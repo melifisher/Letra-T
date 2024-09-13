@@ -22,7 +22,7 @@ namespace Letra_T
             Indices = indices;
             Color = color; 
             CalculateCenterOfMass();
-            //SetupBuffers();
+            SetupBuffers();
         }
         public void Draw()
         {
