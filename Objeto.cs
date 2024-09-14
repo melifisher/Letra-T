@@ -2,6 +2,7 @@
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System;
+using OpenTK.Input;
 
 namespace Letra_T
 {
@@ -10,17 +11,31 @@ namespace Letra_T
     {
         public Dictionary<string, Parte> Partes { get; set; }
         public Punto CenterOfMass { get; set; }
+        private Vector3 Position { get; set; }
+        private Vector3 Rotation { get; set; }
+        private Vector3 Scale { get; set; }
 
         public Objeto()
         {
             Partes = new Dictionary<string, Parte>();
             CenterOfMass = new Punto();
+            Position = Vector3.Zero;
+            Rotation = Vector3.Zero;
+            Scale = Vector3.One;
+        }
+        public Objeto(Punto centerOfMass)
+        {
+            Partes = new Dictionary<string, Parte>();
+            this.CenterOfMass = centerOfMass;
+            Position = Vector3.Zero;
+            Rotation = Vector3.Zero;
+            Scale = Vector3.One;
         }
 
         public void AddParte(string key, Parte parte)
         {
             Partes.Add(key, parte);
-            RecalculateCenterOfMass();
+            //RecalculateCenterOfMass();
         }
         public Parte GetParte(string key)
         {
@@ -32,6 +47,12 @@ namespace Letra_T
         }
         public void Draw()
         {
+            Matrix4 objetoModelMatrix = GetModelMatrix();
+            Matrix4 parteModelMatrix = GetPartesModelMatrix();
+            parteModelMatrix *= objetoModelMatrix;
+
+            GL.MultMatrix(ref parteModelMatrix);
+
             foreach (var parte in Partes)
             {
                 parte.Value.Draw();
@@ -40,14 +61,54 @@ namespace Letra_T
 
         public void Update(float deltaTime)
         {
+            Rotation += new Vector3(deltaTime, deltaTime, 0);
+
+            var keyboard = Keyboard.GetState();
+
+            if (keyboard.IsKeyDown(Key.Up))
+            {
+                Scale += new Vector3(0.01f);
+            }
+            if (keyboard.IsKeyDown(Key.Down))
+            {
+                Scale -= new Vector3(0.01f);
+                Scale = new Vector3(Math.Max(Scale.X, 0.1f), Math.Max(Scale.Y, 0.1f), Math.Max(Scale.Z, 0.1f));
+            }
+
+            if (keyboard.IsKeyDown(Key.Right))
+            {
+                Position += new Vector3(0.01f, 0, 0);
+            }
+            if (keyboard.IsKeyDown(Key.Left))
+            {
+                Position -= new Vector3(0.01f, 0, 0);
+            }
+
             foreach (var parte in Partes)
             {
                 parte.Value.Update(deltaTime);
             }
-
-            //Rotation += new Vector3(0, deltaTime, 0);
-            GL.Rotate(deltaTime * 5.0, new Vector3d(-1, 1, 0));
         }
+        public Matrix4 GetModelMatrix()
+        {
+            return Matrix4.CreateTranslation(-CenterOfMass.ToVector3())
+                * Matrix4.CreateScale(Scale)
+                * Matrix4.CreateRotationX(Rotation.X)
+                * Matrix4.CreateRotationY(Rotation.Y)
+                * Matrix4.CreateRotationZ(Rotation.Z)
+                * Matrix4.CreateTranslation(CenterOfMass.ToVector3())
+                * Matrix4.CreateTranslation(Position);
+        }
+        public Matrix4 GetPartesModelMatrix()
+        {
+            Matrix4 parteModelMatrix = Matrix4.Identity;
+            foreach (var parte in Partes)
+            {
+                parteModelMatrix *= parte.Value.GetModelMatrix();
+            }
+            return parteModelMatrix;
+        }
+
         private void RecalculateCenterOfMass()
         {
             if (Partes.Count == 0)
@@ -59,29 +120,12 @@ namespace Letra_T
             float sumX = 0, sumY = 0, sumZ = 0;
             foreach (var parte in Partes)
             {
-                //sum += parte.Value.CenterOfMass + parte.Value.Position;
                 sumX += parte.Value.CenterOfMass.X;
                 sumY += parte.Value.CenterOfMass.Y;
                 sumZ += parte.Value.CenterOfMass.Z;
             }
             int count = Partes.Count;
             CenterOfMass = new Punto(sumX / count, sumY / count, sumZ / count);
-        }
-
-        public Matrix4 GetModelMatrix()
-        {
-            Vector3 CenterOfMassVector = new Vector3(CenterOfMass.X, CenterOfMass.Y, CenterOfMass.Z);
-
-            return Matrix4.CreateTranslation(-CenterOfMassVector)
-                 * Matrix4.CreateTranslation(CenterOfMassVector);
-        }
-        
-        public void Dispose()
-        {
-            foreach (var parte in Partes)
-            {
-                parte.Value.Dispose();   
-            }
         }
     }
 }

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using OpenTK;
-
+using OpenTK.Graphics.OpenGL;
+using OpenTK.Input;
 
 namespace Letra_T
 {
@@ -10,11 +11,26 @@ namespace Letra_T
     {
         public Dictionary<string,Poligono> Poligonos { get; set; }
         public Punto CenterOfMass { get; set; }
+        private Vector3 Position { get; set; }
+        private Vector3 Rotation { get; set; }
+        private float scaleSpeed = 0.01f;
+        private Vector3 Scale { get; set; }
 
         public Parte()
         {
             Poligonos = new Dictionary<string, Poligono>();
-            CenterOfMass = new Punto();
+            RecalculateCenterOfMass();
+            Position = Vector3.Zero;
+            Rotation = Vector3.Zero;
+            Scale = Vector3.One;
+        }
+        public Parte(Punto centerOfMass)
+        {
+            Poligonos = new Dictionary<string, Poligono>();
+            CenterOfMass = centerOfMass;
+            Position = Vector3.Zero;
+            Rotation = Vector3.Zero;
+            Scale = Vector3.One;
         }
 
         public void AddPoligono(string key, Poligono poligono)
@@ -30,8 +46,12 @@ namespace Letra_T
         {
             Poligonos.Remove(key);
         }
+
         public void Draw()
         {
+            //Matrix4 parteModelMatrix = GetModelMatrix() * objetoModelMatrix;
+            //GL.MultMatrix(ref parteModelMatrix);
+
             foreach (var poligono in Poligonos)
             {
                 poligono.Value.Draw();
@@ -61,16 +81,13 @@ namespace Letra_T
 
         public Matrix4 GetModelMatrix()
         {
-            Vector3 CenterOfMassVector = new Vector3(CenterOfMass.X, CenterOfMass.Y, CenterOfMass.Z);
-            return Matrix4.CreateTranslation(-CenterOfMassVector)
-                 * Matrix4.CreateTranslation(CenterOfMassVector);
-        }
-        public void Dispose()
-        {
-            foreach (var poligono in Poligonos)
-            {
-                poligono.Value.Dispose();
-            }
+            return Matrix4.CreateTranslation(-CenterOfMass.ToVector3())
+                * Matrix4.CreateScale(Scale)
+                * Matrix4.CreateRotationX(Rotation.X)
+                * Matrix4.CreateRotationY(Rotation.Y)
+                * Matrix4.CreateRotationZ(Rotation.Z)
+                * Matrix4.CreateTranslation(CenterOfMass.ToVector3())
+                * Matrix4.CreateTranslation(Position);
         }
     }
 }
