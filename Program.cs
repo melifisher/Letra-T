@@ -1,19 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Letra_T
 {
     public class Program 
     {
+        [STAThread]
         static void Main(string[] args)
         {
-            using (Game game = new Game(800, 600, "Letra T"))
-            {
-                game.Run(60.0);
-            }
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new MainForm());
+
+            //using (Game game = new Game(800, 600, "Letra T"))
+            //{
+            //    game.Run(60.0);
+            //}
         }
     }
 }

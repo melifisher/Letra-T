@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System;
+using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System.Drawing;
 
@@ -24,24 +25,20 @@ namespace Letra_T
         {
             GL.Begin(PrimitiveType.Polygon);
             GL.Color4(Color);
-            foreach ( var punto in Puntos)
+            foreach (var punto in Puntos)
             {
                 GL.Vertex3(punto.X, punto.Y, punto.Z);
             }
             GL.End();
         }
-
         private void CalculateCenterOfMass()
         {
-            float sumX = 0, sumY = 0, sumZ = 0;
+            Punto sum = new Punto();
             foreach (var vertex in Puntos)
             {
-                sumX += vertex.X;
-                sumY += vertex.Y;
-                sumZ += vertex.Z;
+                sum += vertex;
             }
-            int count = Puntos.Count;
-            CenterOfMass = new Punto(sumX / count, sumY / count, sumZ / count);
+            CenterOfMass = sum/ Puntos.Count;
         }
 
     }

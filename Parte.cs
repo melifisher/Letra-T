@@ -7,36 +7,27 @@ using OpenTK.Input;
 namespace Letra_T
 {
     [Serializable]
-    class Parte
+    class Parte : Transformable
     {
         public Dictionary<string,Poligono> Poligonos { get; set; }
-        public Punto CenterOfMass { get; set; }
-        private Vector3 Position { get; set; }
-        private Vector3 Rotation { get; set; }
-        private float scaleSpeed = 0.01f;
-        private Vector3 Scale { get; set; }
-
+        private readonly bool recalculate;
         public Parte()
         {
             Poligonos = new Dictionary<string, Poligono>();
             RecalculateCenterOfMass();
-            Position = Vector3.Zero;
-            Rotation = Vector3.Zero;
-            Scale = Vector3.One;
+            recalculate = true;
         }
         public Parte(Punto centerOfMass)
         {
             Poligonos = new Dictionary<string, Poligono>();
             CenterOfMass = centerOfMass;
-            Position = Vector3.Zero;
-            Rotation = Vector3.Zero;
-            Scale = Vector3.One;
+            recalculate = false;
         }
 
         public void AddPoligono(string key, Poligono poligono)
         {
             Poligonos.Add(key, poligono);
-            RecalculateCenterOfMass();
+            if(recalculate) RecalculateCenterOfMass();
         }
         public Poligono GetPoligono(string key)
         {
@@ -46,20 +37,31 @@ namespace Letra_T
         {
             Poligonos.Remove(key);
         }
-
-        public void Draw()
+        
+        public override void Draw()
         {
-            //Matrix4 parteModelMatrix = GetModelMatrix() * objetoModelMatrix;
-            //GL.MultMatrix(ref parteModelMatrix);
+            //Matrix4 poligonoModelMatrix = GetModelMatrix() * objetoModelMatrix;
+            //GL.MultMatrix(ref poligonoModelMatrix);
+
+            GL.PushMatrix();
+            GL.MultMatrix(ref transformMatrix);
 
             foreach (var poligono in Poligonos)
             {
                 poligono.Value.Draw();
             }
+
+            GL.PopMatrix();
+        }
+
+        public override bool Intersects(Vector3 rayOrigin, Vector3 rayDirection, out float distance)
+        {
+            return base.Intersects(rayOrigin, rayDirection, out distance);
         }
         public void Update(float deltaTime)
         {
         }
+
         private void RecalculateCenterOfMass()
         {
             if (Poligonos.Count == 0)
@@ -68,26 +70,12 @@ namespace Letra_T
                 return;
             }
 
-            float sumX = 0, sumY = 0, sumZ = 0;
+            Punto sum = new Punto();
             foreach (var poligono in Poligonos)
             {
-                sumX += poligono.Value.CenterOfMass.X;
-                sumY += poligono.Value.CenterOfMass.Y;
-                sumZ += poligono.Value.CenterOfMass.Z;
+                sum += poligono.Value.CenterOfMass;
             }
-            int count = Poligonos.Count;
-            CenterOfMass = new Punto(sumX / count, sumY / count, sumZ / count);
-        }
-
-        public Matrix4 GetModelMatrix()
-        {
-            return Matrix4.CreateTranslation(-CenterOfMass.ToVector3())
-                * Matrix4.CreateScale(Scale)
-                * Matrix4.CreateRotationX(Rotation.X)
-                * Matrix4.CreateRotationY(Rotation.Y)
-                * Matrix4.CreateRotationZ(Rotation.Z)
-                * Matrix4.CreateTranslation(CenterOfMass.ToVector3())
-                * Matrix4.CreateTranslation(Position);
+            CenterOfMass = sum / Poligonos.Count;
         }
     }
 }

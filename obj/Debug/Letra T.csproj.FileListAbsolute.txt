@@ -11,3 +11,6 @@ C:\Users\Hp\source\repos\Letra T\obj\Debug\Letra T.exe
 C:\Users\Hp\source\repos\Letra T\obj\Debug\Letra T.pdb
 C:\Users\Hp\source\repos\Letra T\bin\Debug\Newtonsoft.Json.dll
 C:\Users\Hp\source\repos\Letra T\bin\Debug\Newtonsoft.Json.xml
+C:\Users\Hp\source\repos\Letra T\bin\Debug\OpenTK.GLControl.dll
+C:\Users\Hp\source\repos\Letra T\bin\Debug\OpenTK.GLControl.pdb
+C:\Users\Hp\source\repos\Letra T\bin\Debug\OpenTK.GLControl.xml

@@ -23,13 +23,15 @@ namespace Letra_T
         {
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
             GL.Enable(EnableCap.DepthTest);
-            //CursorVisible = true;
 
             //var letraT = CrearLetraT();
             //ObjetoSerializer.Guardar<Objeto>(letraT, "letraT.json");
 
             escenario = new Escenario();
-            escenario.AddObjeto("letraT", CargarLetraT());
+            escenario.AddObjeto("letraT1", CargarLetraT());
+            escenario.Objetos["letraT1"].Trasladar(new Vector3(10f, 0, 0));
+            escenario.AddObjeto("letraT2", CargarLetraT());
+            escenario.Objetos["letraT2"].Trasladar(new Vector3(-10f, 0, 0));
 
             base.OnLoad(e);
         }
@@ -48,7 +50,8 @@ namespace Letra_T
 
             CameraUpdate(input);
 
-            escenario.Update((float)e.Time);
+            //escenario.Update((float)e.Time);
+            escenario.Rotar(new Vector3(0, MathHelper.DegreesToRadians(1), 0));
 
             base.OnUpdateFrame(e);
         }
@@ -64,9 +67,9 @@ namespace Letra_T
             if (input.IsKeyDown(Key.D))
                 cameraPosition.X += cameraSpeed;
             if (input.IsKeyDown(Key.Q))
-                cameraPosition.Y += cameraSpeed;
-            if (input.IsKeyDown(Key.E))
                 cameraPosition.Y -= cameraSpeed;
+            if (input.IsKeyDown(Key.E))
+                cameraPosition.Y += cameraSpeed;
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -94,7 +97,7 @@ namespace Letra_T
         private void UpdateProjectionMatrix()
         {
             float aspect = (float)Width / Height;
-            Matrix4 perspective = Matrix4.CreatePerspectiveFieldOfView(MathHelper.PiOver4, aspect, 0.1f, 64);
+            Matrix4 perspective = Matrix4.CreatePerspectiveFieldOfView(MathHelper.PiOver4, aspect, 0.1f, 100.0f);
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadMatrix(ref perspective);
         }
@@ -106,7 +109,7 @@ namespace Letra_T
         
             private Objeto CrearLetraT()
         {
-            var letraT = new Objeto(new Punto(-0.1f, -0.5f, 0.1f));
+            var letraT = new Objeto();
 
             // Parte vertical de la T
             var parteVertical = new Parte();

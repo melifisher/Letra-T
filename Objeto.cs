@@ -7,35 +7,27 @@ using OpenTK.Input;
 namespace Letra_T
 {
     [Serializable]
-    class Objeto
+    class Objeto : Transformable
     {
         public Dictionary<string, Parte> Partes { get; set; }
-        public Punto CenterOfMass { get; set; }
-        private Vector3 Position { get; set; }
-        private Vector3 Rotation { get; set; }
-        private Vector3 Scale { get; set; }
-
+        private readonly bool recalculate;
         public Objeto()
         {
             Partes = new Dictionary<string, Parte>();
             CenterOfMass = new Punto();
-            Position = Vector3.Zero;
-            Rotation = Vector3.Zero;
-            Scale = Vector3.One;
+            recalculate = true;
         }
         public Objeto(Punto centerOfMass)
         {
             Partes = new Dictionary<string, Parte>();
             this.CenterOfMass = centerOfMass;
-            Position = Vector3.Zero;
-            Rotation = Vector3.Zero;
-            Scale = Vector3.One;
+            recalculate = false;
         }
 
         public void AddParte(string key, Parte parte)
         {
             Partes.Add(key, parte);
-            //RecalculateCenterOfMass();
+            if(recalculate) RecalculateCenterOfMass();
         }
         public Parte GetParte(string key)
         {
@@ -45,69 +37,96 @@ namespace Letra_T
         {
             Partes.Remove(key);
         }
+        override
         public void Draw()
         {
-            Matrix4 objetoModelMatrix = GetModelMatrix();
-            Matrix4 parteModelMatrix = GetPartesModelMatrix();
-            parteModelMatrix *= objetoModelMatrix;
+            //Matrix4 parteModelMatrix = GetModelMatrix();
+            //Matrix4 partesModelMatrix = GetPartesModelMatrix();
+            //partesModelMatrix *= parteModelMatrix;
 
-            GL.MultMatrix(ref parteModelMatrix);
+            //GL.MultMatrix(ref partesModelMatrix);
+
+            GL.PushMatrix();
+            GL.MultMatrix(ref transformMatrix);
 
             foreach (var parte in Partes)
             {
                 parte.Value.Draw();
             }
+
+            GL.PopMatrix();
         }
-
-        public void Update(float deltaTime)
+        public override bool Intersects(Vector3 rayOrigin, Vector3 rayDirection, out float distance)
         {
-            Rotation += new Vector3(deltaTime, deltaTime, 0);
-
-            var keyboard = Keyboard.GetState();
-
-            if (keyboard.IsKeyDown(Key.Up))
-            {
-                Scale += new Vector3(0.01f);
-            }
-            if (keyboard.IsKeyDown(Key.Down))
-            {
-                Scale -= new Vector3(0.01f);
-                Scale = new Vector3(Math.Max(Scale.X, 0.1f), Math.Max(Scale.Y, 0.1f), Math.Max(Scale.Z, 0.1f));
-            }
-
-            if (keyboard.IsKeyDown(Key.Right))
-            {
-                Position += new Vector3(0.01f, 0, 0);
-            }
-            if (keyboard.IsKeyDown(Key.Left))
-            {
-                Position -= new Vector3(0.01f, 0, 0);
-            }
+            distance = float.MaxValue;
+            bool hit = false;
 
             foreach (var parte in Partes)
             {
-                parte.Value.Update(deltaTime);
+                float parteDistance;
+                if (parte.Value.Intersects(rayOrigin, rayDirection, out parteDistance))
+                {
+                    if (parteDistance < distance)
+                    {
+                        distance = parteDistance;
+                        hit = true;
+                    }
+                }
             }
+
+            return hit;
         }
-        public Matrix4 GetModelMatrix()
-        {
-            return Matrix4.CreateTranslation(-CenterOfMass.ToVector3())
-                * Matrix4.CreateScale(Scale)
-                * Matrix4.CreateRotationX(Rotation.X)
-                * Matrix4.CreateRotationY(Rotation.Y)
-                * Matrix4.CreateRotationZ(Rotation.Z)
-                * Matrix4.CreateTranslation(CenterOfMass.ToVector3())
-                * Matrix4.CreateTranslation(Position);
-        }
-        public Matrix4 GetPartesModelMatrix()
-        {
-            Matrix4 parteModelMatrix = Matrix4.Identity;
-            foreach (var parte in Partes)
-            {
-                parteModelMatrix *= parte.Value.GetModelMatrix();
-            }
-            return parteModelMatrix;
-        }
+
+        //public void Update(float deltaTime)
+        //{
+        //    Rotation += new Vector3(deltaTime, deltaTime, 0);
+
+        //    var keyboard = Keyboard.GetState();
+
+        //    if (keyboard.IsKeyDown(Key.Up))
+        //    {
+        //        Scale += new Vector3(0.01f);
+        //    }
+        //    if (keyboard.IsKeyDown(Key.Down))
+        //    {
+        //        Scale -= new Vector3(0.01f);
+        //        Scale = new Vector3(Math.Max(Scale.X, 0.1f), Math.Max(Scale.Y, 0.1f), Math.Max(Scale.Z, 0.1f));
+        //    }
+
+        //    if (keyboard.IsKeyDown(Key.Right))
+        //    {
+        //        Position += new Vector3(0.01f, 0, 0);
+        //    }
+        //    if (keyboard.IsKeyDown(Key.Left))
+        //    {
+        //        Position -= new Vector3(0.01f, 0, 0);
+        //    }
+
+        //    foreach (var parte in Partes)
+        //    {
+        //        parte.Value.Update(deltaTime);
+        //    }
+        //    //Partes["vertical"].Update(deltaTime);
+        //}
+        //public Matrix4 GetModelMatrix()
+        //{
+        //    return Matrix4.CreateTranslation(-CenterOfMass.ToVector3())
+        //        * Matrix4.CreateScale(Scale)
+        //        * Matrix4.CreateRotationX(Rotation.X)
+        //        * Matrix4.CreateRotationY(Rotation.Y)
+        //        * Matrix4.CreateRotationZ(Rotation.Z)
+        //        * Matrix4.CreateTranslation(CenterOfMass.ToVector3())
+        //        * Matrix4.CreateTranslation(Position);
+        //}
+        //public Matrix4 GetPartesModelMatrix()
+        //{
+        //    Matrix4 parteModelMatrix = Matrix4.Identity;
+        //    foreach (var parte in Partes)
+        //    {
+        //        parteModelMatrix *= parte.Value.GetModelMatrix();
+        //    }
+        //    return parteModelMatrix;
+        //}
 
         private void RecalculateCenterOfMass()
         {
