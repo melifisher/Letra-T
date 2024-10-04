@@ -58,19 +58,19 @@ namespace Letra_T
                 Dock = DockStyle.Fill
             };
             glControl.Paint += GlControl_Paint;
-            glControl.MouseClick += GlControl_MouseClick;
+            //glControl.MouseClick += GlControl_MouseClick;
 
-            btnRotate = new Button { Text = "Rotate", Location = new Point(10, 10), Width = 70 };
-            btnTranslate = new Button { Text = "Translate", Location = new Point(90, 10), Width = 70 };
-            btnScale = new Button { Text = "Scale", Location = new Point(170, 10), Width = 70 };
+            btnRotate = new Button { Text = "Rotar", Location = new Point(10, 100), Width = 70 };
+            btnTranslate = new Button { Text = "Trasladar", Location = new Point(90, 100), Width = 70 };
+            btnScale = new Button { Text = "Escalar", Location = new Point(170, 100), Width = 70 };
 
-            txtX = new TextBox { Location = new Point(70, 40), Width = 60 };
-            txtY = new TextBox { Location = new Point(70, 70), Width = 60 };
-            txtZ = new TextBox { Location = new Point(70, 100), Width = 60 };
+            txtX = new TextBox { Location = new Point(70, 10), Width = 60 };
+            txtY = new TextBox { Location = new Point(70, 40), Width = 60 };
+            txtZ = new TextBox { Location = new Point(70, 70), Width = 60 };
 
-            lblX = new Label { Text = "X:", Location = new Point(10, 43) };
-            lblY = new Label { Text = "Y:", Location = new Point(10, 73) };
-            lblZ = new Label { Text = "Z:", Location = new Point(10, 103) };
+            lblX = new Label { Text = "X:", Location = new Point(10, 13) };
+            lblY = new Label { Text = "Y:", Location = new Point(10, 43) };
+            lblZ = new Label { Text = "Z:", Location = new Point(10, 73) };
 
             comboBoxObjects = new ComboBox { Location = new Point(10, 130), Width = 230 };
 
@@ -101,7 +101,6 @@ namespace Letra_T
         {
             if (glControl == null || !glControl.IsHandleCreated)
             {
-                // If GLControl is not ready, postpone initialization
                 this.Load += (s, e) => InitializeOpenGL();
                 return;
             }
@@ -117,14 +116,14 @@ namespace Letra_T
             float aspect = glControl.Width / (float)glControl.Height;
             projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(
                 MathHelper.PiOver4, aspect, 1, 64);
-            modelViewMatrix = Matrix4.LookAt(0, 5, 5, 0, 0, 0, 0, 1, 0);
-
+            modelViewMatrix = Matrix4.LookAt(0, 0, 3, 0, 0, 0, 0, 1, 0);
 
             glControl.Invalidate();
         }
         private void PopulateComboBox()
         {
             comboBoxObjects.Items.Clear();
+            comboBoxObjects.Items.Add("Escenario");
             foreach (var obj in escenario.Objetos)
             {
                 comboBoxObjects.Items.Add(obj.Key);
@@ -138,17 +137,16 @@ namespace Letra_T
         {
             //var letraT = CrearLetraT();
             //ObjetoSerializer.Guardar<Objeto>(letraT, "letraT2.json");
-            escenario.AddObjeto("letraT1", ObjetoSerializer.Cargar<Objeto>("letraT.json"));
-            escenario.AddObjeto("letraT2", ObjetoSerializer.Cargar<Objeto>("letraT2.json"));
+            Objeto letraT1 = ObjetoSerializer.Cargar<Objeto>("letraT.json");
+            letraT1.Trasladar(new Vector3(0.7f, 0, 0));
+            escenario.AddObjeto("letraT1", letraT1);
+            Objeto letraT2 = ObjetoSerializer.Cargar<Objeto>("letraT2.json");
+            letraT2.Trasladar(new Vector3(-0.7f, 0, 0));
+            escenario.AddObjeto("letraT2", letraT2);
         }
 
         private void ApplyTransformation(TransformationType type)
         {
-            if (selectedObject == null)
-            {
-                MessageBox.Show("No object selected", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
 
             if (!float.TryParse(txtX.Text, out float x) ||
                 !float.TryParse(txtY.Text, out float y) ||
@@ -160,22 +158,41 @@ namespace Letra_T
 
             Vector3 transformVector = new Vector3(x, y, z);
 
-            switch (type)
+
+            if (selectedObject == null)
             {
-                case TransformationType.Rotate:
-                    selectedObject.Rotar(transformVector*(float)(Math.PI/180));
-                    break;
-                case TransformationType.Translate:
-                    selectedObject.Trasladar(transformVector);
-                    break;
-                case TransformationType.Scale:
-                    selectedObject.Escalar(new Vector3(1 + x, 1 + y, 1 + z));
-                    break;
+                switch (type)
+                {
+                    case TransformationType.Rotate:
+                        escenario.Rotar(transformVector * (float)(Math.PI / 180));
+                        break;
+                    case TransformationType.Translate:
+                        escenario.Trasladar(transformVector);
+                        break;
+                    case TransformationType.Scale:
+                        escenario.Escalar(transformVector);
+                        break;
+                }
+            }
+            else
+            {
+                switch (type)
+                {
+                    case TransformationType.Rotate:
+                        selectedObject.Rotar(transformVector * (float)(Math.PI / 180));
+                        break;
+                    case TransformationType.Translate:
+                        selectedObject.Trasladar(transformVector);
+                        break;
+                    case TransformationType.Scale:
+                        selectedObject.Escalar(transformVector);
+                        break;
+                }
+
             }
 
-            glControl.Invalidate(); // Request a redraw
+            glControl.Invalidate();
         }
-
         private void GlControl_Paint(object sender, PaintEventArgs e)
         {
             if (!glControl.IsHandleCreated) return;
@@ -194,126 +211,12 @@ namespace Letra_T
             glControl.SwapBuffers();
         }
 
-        private void GlControl_MouseClick(object sender, MouseEventArgs e)
-        {
-            Vector3 nearPoint = UnprojectPoint(e.X, e.Y, 0f);
-            Vector3 farPoint = UnprojectPoint(e.X, e.Y, 1f);
-
-            Vector3 direction = Vector3.Normalize(farPoint - nearPoint);
-
-            KeyValuePair<string, Transformable> clickedObject = PerformRayPicking(nearPoint, direction);
-
-            if (clickedObject.Value != null)
-            {
-                // Actualizar la selección en el ComboBox
-                if (clickedObject.Value is Objeto)
-                {
-                    comboBoxObjects.SelectedItem = clickedObject.Key;
-                }
-                else if (clickedObject.Value is Parte)
-                {
-                    Parte parte = (Parte)clickedObject.Value;
-                    var parentObjeto = escenario.Objetos.FirstOrDefault(kv => kv.Value.Partes.ContainsValue(parte));
-                    //Objeto parentObjeto = escenario.Objetos.Find(o => o.Partes.Contains(parte));
-                    comboBoxObjects.SelectedItem = $"{parentObjeto.Key} - {clickedObject.Key}";
-                }
-                //Console.WriteLine($"Clicked object: {clickedObject.Key}"); // Debug output
-            }
-        }
-
-        private Vector3 UnprojectPoint(int x, int y, float z)
-        {
-            Vector4 vec;
-
-            vec.X = 2.0f * x / glControl.Width - 1;
-            vec.Y = -(2.0f * y / glControl.Height - 1);
-            vec.Z = z;
-            vec.W = 1.0f;
-
-            Matrix4 viewProjectionInverse = Matrix4.Invert(modelViewMatrix * projectionMatrix);
-
-            vec = Vector4.Transform(vec, viewProjectionInverse);
-            if (vec.W > 0.000001f || vec.W < -0.000001f)
-            {
-                vec.X /= vec.W;
-                vec.Y /= vec.W;
-                vec.Z /= vec.W;
-            }
-
-            return vec.Xyz;
-        }
-
-        private KeyValuePair<string, Transformable> PerformRayPicking(Vector3 rayOrigin, Vector3 rayDirection)
-        {
-            float closestDistance = float.MaxValue;
-
-            KeyValuePair<string, Transformable> closestObject = new KeyValuePair<string, Transformable>();
-            
-
-            foreach (var objeto in escenario.Objetos)
-            {
-                float distance;
-                if (IntersectsObject(rayOrigin, rayDirection, objeto.Value, out distance))
-                {
-                    if (distance < closestDistance)
-                    {
-                        closestDistance = distance;
-                        closestObject = new KeyValuePair<string, Transformable>(objeto.Key, objeto.Value);
-                    }
-                }
-
-                foreach (var parte in objeto.Value.Partes)
-                {
-                    if (IntersectsObject(rayOrigin, rayDirection, parte.Value, out distance))
-                    {
-                        if (distance < closestDistance)
-                        {
-                            closestDistance = distance;
-                            closestObject = new KeyValuePair<string, Transformable>(parte.Key,parte.Value);
-                        }
-                    }
-                }
-            }
-            return closestObject;
-        }
-
-        private bool IntersectsObject(Vector3 rayOrigin, Vector3 rayDirection, Transformable obj, out float distance)
-        {
-            float radius = 0.5f;
-            Vector3 center = obj.CenterOfMass.ToVector3() + obj.getPosition();
-
-            Vector3 m = rayOrigin - center;
-            float b = Vector3.Dot(m, rayDirection);
-            float c = Vector3.Dot(m, m) - radius * radius;
-
-            if (c > 0f && b > 0f)
-            {
-                distance = float.MaxValue;
-                return false;
-            }
-
-            float discr = b * b - c;
-
-            if (discr < 0f)
-            {
-                distance = float.MaxValue;
-                return false;
-            }
-
-            distance = -b - (float)Math.Sqrt(discr);
-
-            if (distance < 0f)
-                distance = -b + (float)Math.Sqrt(discr);
-
-            return distance >= 0f;
-        }
-
         private void ComboBoxObjects_SelectedIndexChanged(object sender, EventArgs e)
         {
             string selectedItem = comboBoxObjects.SelectedItem.ToString();
             if (string.IsNullOrEmpty(selectedItem))
             {
-                //Console.WriteLine("No item selected in combo box");
+                Console.WriteLine("No item selected in combo box");
                 return;
             }
 
@@ -321,22 +224,24 @@ namespace Letra_T
 
             if (selectedItem.Contains(" - "))
             {
-                // Es una parte
                 string[] parts = selectedItem.Split(new string[] { " - " }, StringSplitOptions.None);
                 if (escenario.Objetos.TryGetValue(parts[0], out Objeto obj) &&
                     obj.Partes.TryGetValue(parts[1], out Parte part))
                 {
                     selectedObject = part;
-                    Console.WriteLine($"Selected part: {parts[1]} of object {parts[0]}"); // Debug output
+                    Console.WriteLine($"Selected part: {parts[1]} of object {parts[0]}");
                 }
             }
             else
             {
-                // Es un objeto completo
                 if (escenario.Objetos.TryGetValue(selectedItem, out Objeto obj))
                 {
                     selectedObject = obj;
-                    Console.WriteLine($"Selected object: {selectedItem}"); // Debug output
+                    Console.WriteLine($"Selected object: {selectedItem}");
+                }
+                else
+                {
+                    selectedObject = escenario;
                 }
             }
             ResetTransformInputs();

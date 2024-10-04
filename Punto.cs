@@ -55,9 +55,6 @@ namespace Letra_T
 
         public Vector3 ToVector3() => new Vector3(X, Y, Z);
 
-        public float[] ToArray()
-        {
-            return new float[] { X, Y, Z };
-        }
+        public float[] ToArray() => new float[] { X, Y, Z };
     }
 }

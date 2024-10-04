@@ -40,9 +40,6 @@ namespace Letra_T
         
         public override void Draw()
         {
-            //Matrix4 poligonoModelMatrix = GetModelMatrix() * objetoModelMatrix;
-            //GL.MultMatrix(ref poligonoModelMatrix);
-
             GL.PushMatrix();
             GL.MultMatrix(ref transformMatrix);
 
@@ -57,9 +54,6 @@ namespace Letra_T
         public override bool Intersects(Vector3 rayOrigin, Vector3 rayDirection, out float distance)
         {
             return base.Intersects(rayOrigin, rayDirection, out distance);
-        }
-        public void Update(float deltaTime)
-        {
         }
 
         private void RecalculateCenterOfMass()

@@ -31,8 +31,6 @@ namespace Letra_T
         {
             GL.PushMatrix();
             GL.MultMatrix(ref transformMatrix);
-            
-            DrawReferenceAxes();
 
             foreach (var objeto in Objetos)
             {

@@ -20,7 +20,7 @@ namespace Letra_T
         public Objeto(Punto centerOfMass)
         {
             Partes = new Dictionary<string, Parte>();
-            this.CenterOfMass = centerOfMass;
+            RecalculateCenterOfMass();
             recalculate = false;
         }
 
@@ -40,12 +40,6 @@ namespace Letra_T
         override
         public void Draw()
         {
-            //Matrix4 parteModelMatrix = GetModelMatrix();
-            //Matrix4 partesModelMatrix = GetPartesModelMatrix();
-            //partesModelMatrix *= parteModelMatrix;
-
-            //GL.MultMatrix(ref partesModelMatrix);
-
             GL.PushMatrix();
             GL.MultMatrix(ref transformMatrix);
 
@@ -53,8 +47,26 @@ namespace Letra_T
             {
                 parte.Value.Draw();
             }
-
             GL.PopMatrix();
+        }
+
+        private void RecalculateCenterOfMass()
+        {
+            if (Partes.Count == 0)
+            {
+                CenterOfMass = new Punto();
+                return;
+            }
+
+            float sumX = 0, sumY = 0, sumZ = 0;
+            foreach (var parte in Partes)
+            {
+                sumX += parte.Value.CenterOfMass.X;
+                sumY += parte.Value.CenterOfMass.Y;
+                sumZ += parte.Value.CenterOfMass.Z;
+            }
+            int count = Partes.Count;
+            CenterOfMass = new Punto(sumX / count, sumY / count, sumZ / count);
         }
         public override bool Intersects(Vector3 rayOrigin, Vector3 rayDirection, out float distance)
         {
@@ -128,23 +140,5 @@ namespace Letra_T
         //    return parteModelMatrix;
         //}
 
-        private void RecalculateCenterOfMass()
-        {
-            if (Partes.Count == 0)
-            {
-                CenterOfMass = new Punto();
-                return;
-            }
-
-            float sumX = 0, sumY = 0, sumZ = 0;
-            foreach (var parte in Partes)
-            {
-                sumX += parte.Value.CenterOfMass.X;
-                sumY += parte.Value.CenterOfMass.Y;
-                sumZ += parte.Value.CenterOfMass.Z;
-            }
-            int count = Partes.Count;
-            CenterOfMass = new Punto(sumX / count, sumY / count, sumZ / count);
-        }
     }
 }

@@ -35,19 +35,24 @@ namespace Letra_T
 
         public void Rotar(Vector3 rotation)
         {
-            Rotation = rotation;
+            Rotation += rotation;
             UpdateTransform();
         }
 
         public void Escalar(Vector3 scale)
         {
-            Scale = scale;
+            Scale += scale;
+            if (Scale.X <= 0 || Scale.Y <= 0 || Scale.Z <= 0)
+            {
+                Scale -= scale;
+                return;
+            }
             UpdateTransform();
         }
 
         public void Trasladar(Vector3 translation)
         {
-            Position = translation;
+            Position += translation;
             UpdateTransform();
         }
 
